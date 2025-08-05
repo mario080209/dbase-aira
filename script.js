@@ -1,88 +1,75 @@
-* {
-  box-sizing: border-box;
+const apiUrl = "https://script.google.com/macros/s/AKfycbzmCEjxaiCMtb8RsxPHyV6_teBsdkOoVa9jrquZg2PMNGgFXrhLdNadzp6uMxkJjFhW/exec";
+
+const form = document.getElementById("form");
+const tbody = document.getElementById("data-body");
+const resetBtn = document.getElementById("reset");
+
+function loadData() {
+  fetch(apiUrl)
+    .then(res => res.json())
+    .then(data => {
+      tbody.innerHTML = "";
+      data.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.ID}</td>
+          <td>${item.NAMA}</td>
+          <td>${item.EKSKUL}</td>
+          <td>${item.STATUS}</td>
+          <td>
+            <button class="action-btn" onclick="editData('${item.ID}', '${item.NAMA}', '${item.EKSKUL}', '${item.STATUS}')">Edit</button>
+            <button class="action-btn" onclick="deleteData('${item.ID}')">Hapus</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
 }
 
-body {
-  font-family: Arial, sans-serif;
-  background: #f2f2f2;
-  margin: 0;
-  padding: 0;
+form.addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const data = {
+    action: "update",
+    ID: document.getElementById("id").value,
+    NAMA: document.getElementById("nama").value,
+    EKSKUL: document.getElementById("ekskul").value,
+    STATUS: document.getElementById("status").value
+  };
+
+  fetch(apiUrl, {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" }
+  })
+    .then(res => res.json())
+    .then(() => {
+      form.reset();
+      loadData();
+    });
+});
+
+function deleteData(id) {
+  if (!confirm("Yakin ingin menghapus data ini?")) return;
+
+  fetch(apiUrl, {
+    method: "POST",
+    body: JSON.stringify({ action: "delete", ID: id }),
+    headers: { "Content-Type": "application/json" }
+  })
+    .then(res => res.json())
+    .then(() => loadData());
 }
 
-.container {
-  max-width: 800px;
-  margin: 40px auto;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
+function editData(id, nama, ekskul, status) {
+  document.getElementById("id").value = id;
+  document.getElementById("nama").value = nama;
+  document.getElementById("ekskul").value = ekskul;
+  document.getElementById("status").value = status;
 }
 
-h1 {
-  text-align: center;
-}
+resetBtn.addEventListener("click", function () {
+  form.reset();
+});
 
-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-form input {
-  flex: 1 1 calc(25% - 10px);
-  padding: 8px;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-  justify-content: flex-end;
-}
-
-button {
-  padding: 10px 20px;
-  cursor: pointer;
-  border: none;
-  background-color: #3498db;
-  color: white;
-  border-radius: 4px;
-}
-
-button:hover {
-  background-color: #2980b9;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-th {
-  background-color: #3498db;
-  color: white;
-}
-
-tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-.action-btn {
-  background-color: #e74c3c;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.action-btn:hover {
-  background-color: #c0392b;
-}
-
+loadData();
